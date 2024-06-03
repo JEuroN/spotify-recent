@@ -13,7 +13,6 @@ app.include_router(
     prefix="/spotify"
   )
 
-
 @app.get("/health")
 async def root():
     return {"status": "Im working"}
