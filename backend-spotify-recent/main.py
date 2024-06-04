@@ -1,18 +1,18 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
+load_dotenv()
 
 #Routes import
-from routes import spotify
+from routes import spotifyRoutes
 
-load_dotenv()
 
 app = FastAPI()
 
 app.include_router(
-    spotify.router,
+    spotifyRoutes.router,
     prefix="/spotify"
   )
 
 @app.get("/health")
-async def root():
+async def healCheck():
     return {"status": "Im working"}
