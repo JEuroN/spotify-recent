@@ -2,14 +2,39 @@ import requests
 import os
 import base64
 
-accessToken = 'BQB9LLtIAFX2bADsmdCu5sy2Wsdt6dRNIMQK5CCAnTPRdbXCYLseTfirDmuqqvMSczGODDalISTjlINOnaKeTaAAWF4E6WJPoIrkJoH7rouTcjT2-Gs'
+from enum import Enum
+
 apiUrl = os.environ.get('SPOTIFY_API_URL')
 spotifyClientId = os.environ.get('SPOTIFY_CLIENT_ID')
 spotifySecretId = os.environ.get('SPOTIFY_CLIENT_SECRET')
 
-async def getSpotifyArtist(artistId):
+searchArtistType = Enum('album', 'artist', 'playlist', 'track', 'show', 'episode', 'audiobook')
+
+
+async def getSpotifyArtistById(artistId):
     try:
-        response = requests.get(f'{apiUrl}artists/{artistId}', headers={"Authorization": f"Bearer {accessToken}"})
+        print()
+        response = requests.get(f'{apiUrl}artists/{artistId}', headers={"Authorization": f"Bearer {os.environ['SPOTIFY_API_TOKEN']}"})
+        if(response.status_code == 200):
+            data = response.json()
+            return {'data': data, 'status': 'ok', 'code':200}
+        return {'data': response.json(), 'status': 'error', 'code': response.status_code}
+    except requests.exceptions.HTTPError as error:
+        return {'data': error, 'status': 'error', 'code': response.status_code}
+
+async def getSpotifyElementByName(search: str, type: searchArtistType, market: str | None = None, limit = 10, offset=0, external: str | None = None):
+    try:
+        url = f'q={search}&type={type}'
+        if(market):
+            url += f'&market={market}'
+        if(limit):
+            url += f'&limit={limit}'
+        if(offset):
+            url += f'&offset={offset}'
+        if(external):
+            url += f'&include_external={external}'
+    
+        response = requests.get(f'{apiUrl}search?{url}', headers={"Authorization": f"Bearer {os.environ['SPOTIFY_API_TOKEN']}"})
         if(response.status_code == 200):
             data = response.json()
             return {'data': data, 'status': 'ok', 'code':200}
@@ -27,7 +52,6 @@ async def getSpotifyClientToken():
         headers = {'content-type': 'application/x-www-form-urlencoded', "Authorization": 'Basic ' + base64.b64encode(authString.encode()).decode()}
         response = requests.post('https://accounts.spotify.com/api/token', headers=headers, params=params)
         if(response.status_code == 200):
-            print(response.json())
             return response.json()['access_token']
         return 'error getting token'
     except requests.exceptions.HTTPError as error:
